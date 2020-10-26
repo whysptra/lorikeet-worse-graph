@@ -1,0 +1,137 @@
+---
+title: "Worse plot"
+author: "Nguyen Dang Thanh"
+date: "10/25/2020"
+output: html_document
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      cache = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(plotly)
+```
+
+
+```{r load-data, warning = FALSE}
+# Read in data from github
+measles <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-25/measles.csv')
+
+#Read in data from repo
+state_income <- read_csv(here::here("data/state_income.csv"))
+educational_attainment <- read_csv(here::here("data/educational_attainment.csv"))
+migration <- read_csv(here::here("data/migration.csv"))
+```
+
+
+
+```{r data-wrangling}
+measles <- measles %>% 
+  mutate(county_state = str_c(county, ", ", state),
+         mmr_below_95 = case_when(
+           mmr < 95 ~ "Yes",
+           mmr >= 95 ~ "No"
+         ))
+
+measles_county <- measles %>%
+  filter(county != "#N/A",
+         mmr != -1) %>% 
+  group_by(county_state) %>%
+  summarise(mmr = mean(mmr),
+            overall = mean(overall),
+            count = n())
+measles_county_income <- measles_county %>% 
+  left_join(state_income,
+            by = "county_state") %>% 
+  rename(percapita_income = estimate) %>% 
+  filter(percapita_income != "NA")
+
+
+```
+
+```{r plot, fig.cap= "From the graph, we can see that anti vaxxer is not very popular in USA and NewYorker earn the most. Also, it seems like "}
+
+measles_county_income %>% 
+  ggplot(aes(x = percapita_income,
+             y = mmr,
+             color = state, 
+             size = count)) +
+  geom_col()+
+  # geom_segment(aes(x = percapita_income,
+  #                  xend = percapita_income,
+  #                  y = mmr, 
+  #                  yend = 0))+
+  geom_point(aes(color = state, size = count))+
+  geom_smooth(method = lm, se = TRUE) +
+  geom_smooth(aes(x = percapita_income,
+                  y = mmr), 
+              method = lm, se = TRUE, color = "black")+
+  ylim(0,100)+
+  xlab("How close are you to NewYork's Salary?") +
+  ylab("Rate of not Antivaxxer") +
+  ggtitle("Relationships between non-Antivaxxer and the gap in income in US",
+          subtitle = "The relationship differs across states") +
+  theme_bw()+
+  theme(legend.position = "top")
+
+ggplotly()
+
+```
+
+```{r}
+
+measles_county_income %>% 
+  ggplot(aes(x = percapita_income,
+             y = mmr)) +
+  geom_point(data = select(measles_county_income, -state),
+             color = "grey") + 
+  geom_point(aes(color = state)) +
+  geom_smooth(method = lm, se = FALSE) +
+  facet_wrap(~state) +
+  xlab("Income Per Capita") +
+  ylab("MMR Vaccination Rates") +
+  ggtitle("Relationships between MMR Vaccination Rates and Income Per Capita",
+          subtitle = "The relationship differs across states") +
+  guides(color = FALSE) +
+  theme_bw()
+
+```
+
+# Description
+
+Why is it good?
+- Focus on the main points
+- Nicely faceted, we can see the trend in each state while also compare with the whole country.
+
+
+Ways to make it bad:
+- Unfacet the graph  
+- Change to lollipop chart  
+- More "Beautiful" color  
+- Add a legend bar (Over-fitting)  
+- Add the size of observations of counties (Over-fitting)  
+- Add irrelevent text  
+- Manipulate Y-axis (Unfocusing)  
+- Add color so that they overlap each other  
+- Add theme that put more focus on background (Unfocusing)
+- Use color to put more focus on color and not data element (Unfocusing)
+- Use image as background (Murica!!!)  
+
+Another idea for a bad plot
+
+```{r}
+
+ggplot(measles_county_income) +
+    geom_smooth(aes(x = percapita_income,
+                    y = mmr), 
+              method = lm, se = TRUE, color = "black")
+
+```
+
+Conclusion: The higher the income, the lower the vaccinate rate.
