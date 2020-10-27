@@ -25,7 +25,8 @@ bibliography: reference.bib
 knitr::opts_chunk$set(echo = FALSE, 
                       message = FALSE, 
                       warning = FALSE,
-                      cache = FALSE)
+                      cache = FALSE,
+                      include=FALSE)
 ```
 
 ```{r libraries}
@@ -403,7 +404,7 @@ Table \@ref(tab:worst-mmr), on the other hand, shows the top five states that ha
 
 It can be argued from these two tables that income per capita is not a good indicator for MMR vaccination rates.
 
-```{r income-plot, fig.cap="Scatter plot of School's MMR Vaccination Rates by Income Per Capita", fig.align="center"}
+```{r income-plot, fig.cap="Scatter plot of School's MMR Vaccination Rates by Income Per Capita", fig.align="center", include=TRUE}
 measles_county_income$quartile <- as.factor(measles_county_income$quartile)
 
 measles_county_income %>% 
@@ -423,6 +424,19 @@ measles_county_income %>%
   guides(color = FALSE) +
   theme_bw()
 ```
+
+> MY WORST GRAPH
+
+```{r include=TRUE}
+measles_county_income %>% 
+  ggplot(aes(x = mmr,
+             y = state,
+             fill= percapita_income)) +
+  geom_col() +
+  scale_fill_viridis()
+  theme(legend.position = "bottom")
+```
+
 
 ```{r income-box, fig.cap="Box plot of School's MMR Vaccination Rates by Income Quantiles", fig.align="center"}
 measles_county_income %>%
